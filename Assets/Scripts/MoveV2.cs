@@ -3,9 +3,6 @@ using UnityEngine;
 public class MoveV2 : MonoBehaviour
 {
 	private Transform position;
-	private const int MAX_STAMINA = 1000;
-
-	private const int cost_stamine = 250;
 
     [SerializeField] private Rigidbody2D rb;
 
@@ -42,18 +39,9 @@ public class MoveV2 : MonoBehaviour
 	[Header("Animation")]
 	[SerializeField]private Animator animator;
 
-	[Header("Climb")]
-
-	[SerializeField] private float speed_Climb;
-	[SerializeField] private PolygonCollider2D polygonCollider2D;
-	private float gravity;
-	private bool climbing;
 
 	[Header("Experimental")]
 
-	[SerializeField] private int currentStamine;
-
-	[SerializeField] private StamineBar stamineBar;
 	
 	[SerializeField] private float	_rollForce = 6.0f;
 	private bool _grounded = false;
@@ -84,8 +72,6 @@ public class MoveV2 : MonoBehaviour
 
 	private void Start()
 	{
-		currentStamine = MAX_STAMINA;
-		stamineBar.SetMaxStamine(MAX_STAMINA);
 		gravity = rb.gravityScale;
 	}
 
@@ -112,11 +98,6 @@ public class MoveV2 : MonoBehaviour
 
 			horizontal_move = input.x * move_speed;
 
-			if(currentStamine < MAX_STAMINA)
-			{
-				currentStamine +=1;
-				stamineBar.SetStamine(currentStamine);
-			}
 
 			if(Input.GetButtonDown("Jump"))
 			{
@@ -172,23 +153,6 @@ public class MoveV2 : MonoBehaviour
 				_timeSinceAttack = 0.0f;
 			}
 			
-			// Roll
-			else if (Input.GetKeyDown("q") && !_rolling)
-			{
-				if(currentStamine > cost_stamine)
-				{
-				_rolling = true;
-				animator.SetTrigger("Roll");
-				audioSource.PlayOneShot(rollSound);
-				rb.velocity = new Vector2(_facingDirection * _rollForce, rb.velocity.y);
-				_rolling = false;
-				}
-				if(currentStamine >= cost_stamine)
-				{
-				currentStamine -= cost_stamine;
-				stamineBar.SetStamine(currentStamine);
-				}
-			}
 
 			//Run
 			if(horizontal_move > 0 || -horizontal_move > 0)
@@ -207,7 +171,6 @@ public class MoveV2 : MonoBehaviour
 			//Set AirSpeed in animator
 			animator.SetFloat("AirSpeedY", rb.velocity.y);
 
-			Climb();
 		}
 	}
 	private void FixedUpdate()
@@ -226,15 +189,6 @@ public class MoveV2 : MonoBehaviour
 		jump = false;
 	}
 
-/*
-	public void OnTriggerStay2D(Collider2D other)
-	{
-		if (other.TryGetComponent(out IInteractable interactable))
-		{
-			interactable.Interact();
-		}
-	}
-	*/
 
 	private void Motion(float move, bool jump) 
 	{
@@ -290,23 +244,5 @@ public class MoveV2 : MonoBehaviour
 	{
 		canMove = move;
 	}
-	private void Climb()
-	{
-		if ((input.y != 0 || climbing) && (polygonCollider2D.IsTouchingLayers(LayerMask.GetMask("Stair"))))
-		{
-			Vector2 climbingSpeed = new Vector2(rb.velocity.x, input.y * speed_Climb);
-			rb.velocity = climbingSpeed;
-			rb.gravityScale = 0;
-			climbing = true;
-		}
-		else
-		{
-			rb.gravityScale = gravity;
-			climbing = false;
-		}
-		if (in_ground)
-		{
-			climbing = false;
-		}
-	}
+
 }
